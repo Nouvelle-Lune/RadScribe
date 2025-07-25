@@ -1,0 +1,219 @@
+import json
+import math
+import tarfile
+import os
+
+from tqdm import tqdm
+from PIL import Image
+from io import BytesIO
+from random import randint
+from random import random as rand
+
+import torch
+from torch.utils.data import Dataset
+import torchvision.transforms as transforms
+
+from utils.loader_utils import Pipeline
+
+
+class Img2txtDatasetWithLabel(Dataset):
+    def __init__(
+        self,
+        configs,
+        bert_tokenizer,
+        t5_tokenizer,
+        data_set_path=None,
+        img_archive=None,
+    ):
+        super().__init__()
+        assert data_set_path is not None
+        self.configs = configs
+        self.max_seq_len = configs["max_seq_len"]
+        self.bert_tokenizer = bert_tokenizer
+        self.t5_tokenizer = t5_tokenizer
+
+        # self.tar = tarfile.open(img_archive, mode='r:gz')
+        self.tar = None
+
+        img_dat = [json.loads(l) for l in open(data_set_path, "r", encoding="utf-8")]
+
+        self.ex_list = [(d["img"], d["text"], d.get("label", "")) for d in img_dat]
+
+        # preprocess pipeline
+        self.proc = PreprocessSeq2seqGen(
+            configs=configs,
+            bert_tokenizer=bert_tokenizer,
+            t5_tokenizer=t5_tokenizer,
+            img_archive=img_archive,
+            root_prefix="data/preprocessed/mimic/",
+        )
+
+    def __len__(self):
+        return len(self.ex_list)
+
+    def __getitem__(self, idx):
+        return self.proc(self.ex_list[idx])
+
+    def __del__(self):
+        """确保在对象销毁时关闭打开的tar文件"""
+        if (
+            hasattr(self, "proc")
+            and self.proc
+            and hasattr(self.proc, "tar")
+            and self.proc.tar
+        ):
+            self.proc.tar.close()
+
+
+def truncate_tokens_pair(
+    tokens_a,
+    tokens_b,
+    max_seq_len,
+    max_len_a=0,
+    max_len_b=0,
+    trunc_seg=None,
+    always_truncate_tail=False,
+):
+    num_truncated_a = [0, 0]
+    num_truncated_b = [0, 0]
+    while True:
+        if len(tokens_a) + len(tokens_b) <= max_seq_len:
+            break
+        if (max_len_a > 0) and len(tokens_a) > max_len_a:
+            trunc_tokens = tokens_a
+            num_truncated = num_truncated_a
+        elif (max_len_b > 0) and len(tokens_b) > max_len_b:
+            trunc_tokens = tokens_b
+            num_truncated = num_truncated_b
+        elif trunc_seg:
+            # truncate the specified segment
+            if trunc_seg == "a":
+                trunc_tokens = tokens_a
+                num_truncated = num_truncated_a
+            else:
+                trunc_tokens = tokens_b
+                num_truncated = num_truncated_b
+        else:
+            # truncate the longer segment
+            if len(tokens_a) > len(tokens_b):
+                trunc_tokens = tokens_a
+                num_truncated = num_truncated_a
+            else:
+                trunc_tokens = tokens_b
+                num_truncated = num_truncated_b
+        # whether always truncate source sequences
+        if (not always_truncate_tail) and (rand() < 0.5):
+            del trunc_tokens[0]
+            num_truncated[0] += 1
+        else:
+            trunc_tokens.pop()
+            num_truncated[1] += 1
+    return num_truncated_a, num_truncated_b
+
+
+class PreprocessSeq2seqGen(Pipeline):
+    def __init__(
+        self,
+        configs,
+        bert_tokenizer,
+        t5_tokenizer,
+        img_archive: tarfile.TarFile,
+        root_prefix: str,
+    ):
+        super().__init__()
+        self.configs = configs
+        self.bert_tokenizer = bert_tokenizer
+        self.t5_tokenizer = t5_tokenizer
+
+        self.img_archive = img_archive
+        self.root_prefix = root_prefix.rstrip("/") + "/"
+
+        # Bug 1 修复：在这里初始化 self.tar 属性
+        self.tar = None
+
+        self.max_seq_len = configs["max_seq_len"]  # maximum length of tokens
+        self.len_vis_input = configs["num_image_embeds"]  # number of visual tokens
+        self.seq_len = configs["seq_len"]  # maximum length of text tokens
+
+        self.img_size = configs["img_size"]  # image size for resizing
+
+        # image preprocessing
+        self.gray3 = transforms.Grayscale(num_output_channels=3)
+        self.resize = transforms.Resize(self.img_size)
+        self.to_tensor = transforms.ToTensor()
+        self.normalize = transforms.Normalize(
+            mean=[0.492, 0.493, 0.494], std=[0.293, 0.293, 0.293]
+        )
+
+    def __call__(self, instance):
+        full_img_path, text_b, label = instance
+
+        try:
+            member_path = os.path.relpath(full_img_path, self.root_prefix)
+        except ValueError:
+
+            norm_full_path = full_img_path.replace("\\", "/")
+            norm_root_prefix = self.root_prefix.replace("\\", "/")
+            member_path = norm_full_path.replace(norm_root_prefix, "", 1)
+
+        if self.tar is None:
+            self.tar = tarfile.open(self.img_archive, mode="r:gz")
+
+        member = self.tar.getmember(member_path.replace("\\", "/"))
+        f = self.tar.extractfile(member)
+        img = Image.open(BytesIO(f.read())).convert("RGB")
+
+        if label and label != "'No Finding'":
+            label_tokens = self.bert_tokenizer.tokenize(label)
+            if len(label_tokens) > self.seq_len:
+                label_tokens = label_tokens[: self.seq_len]
+
+            input_tokens = label_tokens + ["[SEP]"]
+            input_tokens_len = len(input_tokens)
+            pad_len = self.seq_len + 1 - len(input_tokens)
+            input_tokens.extend(["[PAD]"] * pad_len)
+
+        else:
+            input_tokens = ["[SEP]"] + ["[PAD]"] * self.seq_len
+            input_tokens_len = 0
+
+        input_ids = self.bert_tokenizer.convert_tokens_to_ids(input_tokens)
+        input_ids = torch.tensor(input_ids, dtype=torch.long)
+
+        segment_ids = [1 for _ in range(self.seq_len + 1)]
+        segment_ids = torch.tensor(segment_ids, dtype=torch.long)
+
+        total = 1 + self.len_vis_input + 1 + self.seq_len + 1
+        attn_mask = torch.zeros(total, total, dtype=torch.long)
+
+        end_text_at = 1 + self.len_vis_input + 1 + input_tokens_len
+        attn_mask[:end_text_at, :] = 1
+
+        # image preprocessing
+        img = self.gray3(img)
+        img = self.resize(img)
+        img = self.to_tensor(img)
+        img = self.normalize(img)
+
+        if isinstance(text_b, str) and text_b:
+            t_b = self.t5_tokenizer.encode(
+                text_b,
+                add_special_tokens=True,
+                max_length=512,
+                truncation=True,
+            )
+        else:
+            t_b = []
+        if len(t_b) < 512:
+            t_b.extend([self.t5_tokenizer.pad_token_id] * (512 - len(t_b)))
+
+        t_b = torch.tensor(t_b, dtype=torch.long)
+
+        cls_tok = torch.tensor(self.bert_tokenizer.convert_tokens_to_ids(["[CLS]"]))
+        sep_tok = torch.tensor(self.bert_tokenizer.convert_tokens_to_ids(["[SEP]"]))
+
+        return cls_tok, sep_tok, input_ids, segment_ids, attn_mask, img, t_b
+
+
+if __name__ == "__main__":
+    pass

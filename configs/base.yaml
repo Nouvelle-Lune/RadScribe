@@ -1,0 +1,99 @@
+# Mixed precision training configuration
+use_amp: true  # Enable FP16 mixed precision training for faster training and reduced memory usage
+
+# Weights & Biases (WandB) configuration for experiment tracking
+project_name: RadScribe  # WandB project name for organizing experiments
+entity: username  # Replace with your WandB username
+
+# Experiment identification
+task_name: train  # Name of the current training task
+
+# Evaluation and logging settings
+need_evaluate: True  # Whether to perform evaluation during training
+log_step: 5000  # Frequency of logging training progress (every N steps)
+
+# Training control options
+is_early_stopping: True  # Enable early stopping to prevent overfitting
+
+# Checkpoint and resume settings
+is_resume: True  # Whether to resume training from a checkpoint
+is_initialize: True  # Whether to initialize model state from checkpoint
+
+# Training mode configuration
+is_finetune: False  # False: train from scratch, True: fine-tune pre-trained model
+
+# Dataset configuration
+train_with_label: True  # Whether to use labeled data during training
+
+# Output and checkpoint paths
+output_dir: 'checkpoints/output' # Directory to save model checkpoints and outputs
+checkpoint_path: ''  # Path to specific checkpoint file for resuming training (empty for new training)
+
+# Pre-trained model paths for initialization
+encoder_model_path: 'models/pre_model_weights/MedViLL'  # Path to pre-trained encoder model (MedViLL)
+decoder_model_path: 'models/pre_model_weights/ClinicalT5'  # Path to pre-trained decoder model (ClinicalT5)
+
+# Dataset configuration and file paths
+train_dataset_name: train_dataset_10000  # Reference key for training dataset
+valid_dataset_name: valid_dataset_500    # Reference key for validation dataset
+
+# Dataset file paths - each JSON file contains list of {'image': img_path, 'caption': text}
+train_dataset_10000: 'data/mimic/Train_10000.jsonl'  # Training dataset with 10k samples
+valid_dataset_500: 'data/mimic/Valid_500.jsonl'      # Validation dataset with 500 samples
+
+# Preprocessed image archives for faster data loading
+train_img_archive: 'data/preprocessed/mimic/Train_10000.tar.gz'  # Compressed training images
+valid_img_archive: 'data/preprocessed/mimic/Valid_500.tar.gz'    # Compressed validation images
+
+# Legacy pretraining paths (may be used for compatibility)
+pretrain_path: 'models/pre_molsdel_weights/MedViLL'      # Alternative MedViLL path
+pretrain_path_T5: 'models/pre_model_weights/ClinicalT5' # Alternative ClinicalT5 path
+
+# Data loading configuration
+num_workers: 4  # Number of worker processes for data loading (adjust based on CPU cores)
+
+# Image encoder configuration
+img_encoder: ViT  # Image encoder architecture: ViT (Vision Transformer), resnet101, or chexnet121
+
+# Image preprocessing parameters
+img_size: 512      # Input image size (height and width in pixels)
+img_channel: 3     # Number of image channels (3 for RGB images)
+
+# Image embedding configuration
+num_image_embeds: 256  # Number of image patch embeddings for the encoder
+
+# Text processing parameters
+seq_len: 253       # Maximum sequence length for text input
+vocab_size: 30522  # Vocabulary size for text tokenization (BERT-style)
+
+# Model architecture parameters
+vision_width: 768     # Dimension of vision encoder output features
+embedding_size: 768   # Size of embedding vectors
+hidden_size: 768      # Hidden layer size in transformer models
+max_seq_len: 512      # Maximum sequence length for model processing
+
+# Training hyperparameters
+epochs: 20      # Total number of training epochs
+batch_size: 2   # Batch size per GPU (adjust based on GPU memory)
+
+# Optimizer configuration for encoder and decoder components
+optimizer_config: {
+    encoder: {
+        lr: 0.00005,           # Learning rate for encoder parameters
+        warmup_rate_enc: 0.1,  # Warmup rate (10% of total steps for warmup)
+        min_lr: 0.00001,       # Minimum learning rate after decay
+        weight_decay: 0.01     # L2 regularization weight decay for encoder
+    },
+    decoder: {
+        lr: 0.0001,            # Learning rate for decoder parameters (higher than encoder)
+        warmup_rate_dec: 0.1,  # Warmup rate for decoder (10% of total steps)
+        min_lr: 0.00002,       # Minimum learning rate for decoder after decay
+        weight_decay: 0.005    # L2 regularization weight decay for decoder
+    }
+}
+
+# Training schedule configuration
+encoder_freeze_epoch: 0  # Epoch to unfreeze encoder (0 means encoder is trainable from start)
+
+# Gradient accumulation for effective larger batch sizes
+gradient_accumulation_steps: 8  # Accumulate gradients over 8 steps (effective batch size = batch_size * 8)
