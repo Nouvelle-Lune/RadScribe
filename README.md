@@ -12,7 +12,8 @@ The central innovation of RadScribe lies in its hybrid, domain-specialized archi
 
 The model synergistically combines:
 
-* An **image encoder** founded on the principles of **MedViLL**, pre-trained to comprehend the intricate visual patterns and anomalies within biomedical images.  
+* An **image encoder** founded on the principles of **[MedViLL](https://arxiv.org/abs/2105.11333)
+**, pre-trained to comprehend the intricate visual patterns and anomalies within biomedical images.  
 * A **text decoder** built upon **ClinicalT5**, pre-trained on a vast corpus of clinical notes, enabling it to generate text with the precise terminology, syntax, and structure of authentic medical documentation.
 
 The core learning task for RadScribe during fine-tuning is not to learn visual and linguistic concepts from zero, but rather to learn the complex *mapping* between the rich visual features extracted by the MedViLL-based encoder and the sophisticated linguistic representations understood by the ClinicalT5-based decoder. This approach leads to greater data efficiency, faster convergence, and a higher likelihood of producing clinically sound reports compared to training a general-purpose model on the same dataset.
