@@ -32,66 +32,9 @@ The core learning task for RadScribe during fine-tuning is not to learn visual a
 
 At its core, RadScribe is a multimodal encoder-decoder model that implements a sequence-to-sequence learning paradigm. The model processes a chest X-ray image as the input sequence and generates a textual radiology report as the output sequence.
 
-The high-level data flow is as follows:
+## Network Architecture
 
-```mermaid
-flowchart TD
- subgraph Inputs["Inputs"]
-        A["Chest X-ray Image"]
-        B["Report Text for Training"]
-  end
- subgraph Options["Options"]
-    direction LR
-        C1["ImageEncoderResNet101"]
-        C2["ImageEncoderCheXNet121"]
-        C3["ImageEncoderViT"]
-  end
- subgraph subGraph2["Visual Feature Extractor"]
-        C["Select a Visual Backbone"]
-        Options
-        D["Visual Feature Embeddings"]
-  end
- subgraph subGraph3["Embedding Layers"]
-        E["ImageBertEmbeddings"]
-        F["BERT Text Embeddings"]
-  end
- subgraph subGraph4["Fusion and-Encoding"]
-        G["Concatenate: [CLS], [IMG], [SEP], [TXT]"]
-        H["Optional Cross-Attention"]
-        I["BERT Encoder Layers"]
-        J["Contextualized Multimodal Representation"]
-  end
- subgraph subGraph5["Multimodal Encoder (MedViLLEncoder)"]
-    direction LR
-        subGraph3
-        subGraph4
-  end
- subgraph subGraph6["Text Decoder (ClinicalT5Decoder)"]
-        K["T5 Decoder Layers"]
-        L["Decoder Input - Shifted Target Report"]
-        M["Generate Next Token"]
-        N["Final Generated Report"]
-  end
-    A --> C
-    C --> C1 & C2 & C3
-    C1 --> D
-    C2 --> D
-    C3 --> D
-    D --> E
-    B --> F
-    E -- Image Features --> G
-    F -- Text Features (Optional) --> H
-    E --> H
-    H --> G
-    G --> I
-    I --> J
-    J --> K
-    L --> K
-    K -- "Cross-Attention" --> M
-    M --> N
-
-
-```
+![RadScribe Network Architecture](img/RadScribe.png)
     
 This architecture is designed to first "see" and understand the clinical findings in the image and then "write" about them in a coherent and medically appropriate manner.
 
