@@ -12,7 +12,7 @@ The central innovation of RadScribe lies in its hybrid, domain-specialized archi
 
 The model synergistically combines:
 
-* An **image encoder** founded on the principles of **[MedViLL](https://arxiv.org/abs/2105.11333)
+* An **image encoder** founded on the principles of **[MedViLL](https://arxiv.org/abs/2105.11333)**
 **, pre-trained to comprehend the intricate visual patterns and anomalies within biomedical images.  
 * A **text decoder** built upon **ClinicalT5**, pre-trained on a vast corpus of clinical notes, enabling it to generate text with the precise terminology, syntax, and structure of authentic medical documentation.
 
