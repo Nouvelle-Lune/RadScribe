@@ -46,11 +46,11 @@ The image encoder is responsible for transforming a raw pixel-based image into a
 * **Visual Feature Extractor**
 The model first processes the input X-ray using a powerful visual backbone. It supports multiple architectures, initialized with strong pre-trained weights:
 
-ResNet101 ([101-elastic](https://arxiv.org/abs/2102.09475)): A ResNet model based on torchxrayvision 101-elastic.
+[ResNet101 (101-elastic)](https://arxiv.org/abs/2102.09475): A ResNet model based on torchxrayvision 101-elastic.
 
 [CheXNet121](https://arxiv.org/abs/1711.05225): A DenseNet121 model pre-trained on the ChestX-ray14 dataset.
 
-Vision Transformer ([ViT](https://arxiv.org/abs/2010.11929)): A Transformer-based vision model from google/vit-base-patch16-224-in21k.
+[Vision Transformer (ViT)](https://arxiv.org/abs/2010.11929): A Transformer-based vision model from google/vit-base-patch16-224-in21k.
 
 Fine-tuning Strategy:
 A key aspect of this module is its efficient fine-tuning approach. During training, the upper layers responsible for general feature extraction are frozen. Only the lower, specialized layers are trained to identify specific clinical findings. This strategy preserves the powerful, generalized knowledge of the pre-trained models while efficiently adapting them to the medical report generation task and preventing catastrophic forgetting.
