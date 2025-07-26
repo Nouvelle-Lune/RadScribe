@@ -20,7 +20,7 @@ The core learning task for RadScribe during fine-tuning is not to learn visual a
 
 ## **Core Features at a Glance**
 
-* **State-of-the-Art Multimodal Architecture:** A sophisticated encoder-decoder Transformer specifically designed for vision-language tasks in the medical domain.  
+* **Multimodal Architecture:** A sophisticated encoder-decoder Transformer specifically designed for vision-language tasks in the medical domain.  
 * **Domain-Specific Transfer Learning:** Leverages powerful pre-trained weights from MedViLL and ClinicalT5 for superior performance, faster training, and improved data efficiency.  
 * **End-to-End Research Workflow:** Provides a complete, reproducible pipeline covering data preprocessing, model pre-training, fine-tuning, and comprehensive evaluation.  
 * **High-Performance Training:** Features integrated support for mixed-precision training (FP16/BFloat16) via PyTorch's torch.amp, significantly accelerating experimental cycles and reducing GPU memory footprint.  
