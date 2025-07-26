@@ -352,7 +352,7 @@ To resume training from a saved checkpoint, you can modify the configuration fil
 
 ### **Inference and Report Generation**
 
-Once a model has been trained, you can use it to generate a report for a new, unseen chest X-ray. A sample script is provided in the test/ directory.
+Once a model has been trained, you can use it to generate a report for a new, unseen chest X-ray.
 
 
 ### **Evaluation Protocol**
