@@ -169,10 +169,6 @@ RadScribe/
         └── valid
         └── valid.tar.gz
 ```
-**Preprocessing Workflow:**
-
-Once the full MIMIC-CXR-JPG dataset is in place, you must run the provided preprocessing scripts to prepare it for the model.
-
 
 ## **Project Configuration**
 
