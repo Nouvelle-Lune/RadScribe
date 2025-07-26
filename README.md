@@ -12,8 +12,9 @@ The central innovation of RadScribe lies in its hybrid, domain-specialized archi
 
 The model synergistically combines:
 
-* An **image encoder** founded on the principles of **MedViLL**, pre-trained to comprehend the intricate visual patterns and anomalies within biomedical images.  
-* A **text decoder** built upon **ClinicalT5**, pre-trained on a vast corpus of clinical notes, enabling it to generate text with the precise terminology, syntax, and structure of authentic medical documentation.
+* An **image encoder** founded on the principles of [MedViLL](https://arxiv.org/abs/2105.11333)
+**, pre-trained to comprehend the intricate visual patterns and anomalies within biomedical images.  
+* A **text decoder** built upon [ClinicalT5](https://physionet.org/content/clinical-t5/1.0.0/), pre-trained on a vast corpus of clinical notes, enabling it to generate text with the precise terminology, syntax, and structure of authentic medical documentation.
 
 The core learning task for RadScribe during fine-tuning is not to learn visual and linguistic concepts from zero, but rather to learn the complex *mapping* between the rich visual features extracted by the MedViLL-based encoder and the sophisticated linguistic representations understood by the ClinicalT5-based decoder. This approach leads to greater data efficiency, faster convergence, and a higher likelihood of producing clinically sound reports compared to training a general-purpose model on the same dataset.
 
@@ -45,11 +46,11 @@ The image encoder is responsible for transforming a raw pixel-based image into a
 * **Visual Feature Extractor**
 The model first processes the input X-ray using a powerful visual backbone. It supports multiple architectures, initialized with strong pre-trained weights:
 
-ResNet101 (101-elastic): A ResNet model based on torchxrayvision 101-elastic.
+[ResNet101 (101-elastic)](https://arxiv.org/abs/2102.09475): A ResNet model based on torchxrayvision 101-elastic.
 
-CheXNet121: A DenseNet121 model pre-trained on the ChestX-ray14 dataset.
+[CheXNet121](https://arxiv.org/abs/1711.05225): A DenseNet121 model pre-trained on the ChestX-ray14 dataset.
 
-Vision Transformer (ViT): A Transformer-based vision model from google/vit-base-patch16-224-in21k.
+[Vision Transformer (ViT)](https://arxiv.org/abs/2010.11929): A Transformer-based vision model from google/vit-base-patch16-224-in21k.
 
 Fine-tuning Strategy:
 A key aspect of this module is its efficient fine-tuning approach. During training, the upper layers responsible for general feature extraction are frozen. Only the lower, specialized layers are trained to identify specific clinical findings. This strategy preserves the powerful, generalized knowledge of the pre-trained models while efficiently adapting them to the medical report generation task and preventing catastrophic forgetting.
@@ -143,7 +144,7 @@ Due to the sensitive nature of patient data, the MIMIC-CXR-JPG dataset is govern
 To gain access to the full dataset, follow these official steps:
 
 1. **Become a Credentialed User on PhysioNet:** This is a mandatory first step. It requires completing the CITI "Data or Specimens Only Research" training course to ensure you understand the principles of working with human subjects' data.  
-2. **Apply for Access:** Once you are a credentialed user, apply for access to the MIMIC-CXR-JPG dataset directly on the PhysioNet website: [https://physionet.org/content/mimic-cxr-jpg/2.0.0/](https://physionet.org/content/mimic-cxr-jpg/2.0.0/).  
+2. **Apply for Access:** Once you are a credentialed user, apply for access to the [MIMIC-CXR-JPG](https://arxiv.org/abs/1901.07042) dataset directly on the PhysioNet website: [https://physionet.org/content/mimic-cxr-jpg/2.0.0/](https://physionet.org/content/mimic-cxr-jpg/2.0.0/).  
 3. **Download and Organize:** After your application is approved, download the full dataset. You will need the image files (files/) and the metadata/split files (mimic-cxr-2.0.0-chexpert.csv.gz, mimic-cxr-2.0.0-split.csv.gz). Place them in the appropriate directory as described below.
 
 ### **Data Structure and Preprocessing**
@@ -388,7 +389,7 @@ To move beyond linguistic similarity and assess true clinical correctness, **Rad
 ##### 🔍 Evaluation Process
 
 1. **Entity Linking with scispaCy:**  
-   For each generated report and its corresponding ground-truth reference, we use a scispaCy model to perform entity linking.  
+   For each generated report and its corresponding ground-truth reference, we use a [scispaCy](https://arxiv.org/abs/1902.07669) model to perform entity linking.  
    - This process scans the text and identifies clinical concepts, linking them to their unique identifiers (CUIs) in the UMLS knowledge base.  
    - The result is two sets of CUIs: one for the predicted report and one for the reference.
 
