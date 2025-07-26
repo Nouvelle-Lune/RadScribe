@@ -14,7 +14,6 @@ from transformers.modeling_outputs import BaseModelOutput
 
 from models.image_models.resnet101 import ImageEncoderResNet101
 from models.image_models.chexnet121 import ImageEncoderCheXNet121
-from models.image_models.bertViT import Img_patch_embedding
 from models.image_models.ViT import ImageEncoderViT, ImageBertEmbeddingsViT
 
 
