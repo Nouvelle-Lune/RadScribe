@@ -24,7 +24,7 @@ The core learning task for RadScribe during fine-tuning is not to learn visual a
 * **Domain-Specific Transfer Learning:** Leverages powerful pre-trained weights from MedViLL and ClinicalT5 for superior performance, faster training, and improved data efficiency.  
 * **End-to-End Research Workflow:** Provides a complete, reproducible pipeline covering data preprocessing, model pre-training, fine-tuning, and comprehensive evaluation.  
 * **High-Performance Training:** Features integrated support for mixed-precision training (FP16/BFloat16) via PyTorch's torch.amp, significantly accelerating experimental cycles and reducing GPU memory footprint.  
-* **Advanced Experiment Tracking:** Seamlessly integrated with Weights & Biases (W\&B) for real-time, interactive logging of metrics, loss curves, hardware utilization, and generated report samples.  
+* **Experiment Tracking:** Seamlessly integrated with Weights & Biases (W\&B) for real-time, interactive logging of metrics, loss curves, hardware utilization, and generated report samples.  
 * **Clinically-Oriented Evaluation:** Moves beyond standard NLP metrics by incorporating a suite of custom evaluation tools designed to measure true clinical accuracy and factual correctness.
 
 ## **Technical Deep Dive**
